@@ -8,7 +8,7 @@ async function buyPremium(event) {
         const orderId = 'order_' + Date.now();  
         const orderAmount = 100;  
 
-        // Fetch the token from localStorage
+        
         const token = localStorage.getItem('token');
 
         

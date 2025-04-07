@@ -96,11 +96,11 @@ exports.getPaymentStatus = async (req, res) => {
         return res.status(404).json({ message: 'Order not found' });  
       }
       
-      // Update the order status and save the order
+      
     order.status = orderStatus;
     await order.save();
 
-    // Find the user by customerId (in Mongoose, use findOne or findById)
+    
     const user = await User.findById(order.userId);
 
     if (order.status === "SUCCESSFUL") {

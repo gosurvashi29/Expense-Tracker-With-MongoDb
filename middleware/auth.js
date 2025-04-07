@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');  // Mongoose model import
+const User = require('../models/userModel');  
 require("dotenv").config();
 
 const authenticate = async (req, res, next) => {
     try {
-        // Check if the Authorization header exists
+        
         const token = req.header('Authorization');
         if (!token) {
             return res.status(401).json({ message: "Access Denied! No token provided." });
@@ -13,16 +13,16 @@ const authenticate = async (req, res, next) => {
         // Verify the token
         const decoded = jwt.verify(token, process.env.TOKEN);
 
-        // Find the user by decoded userId (Assuming that the payload contains userId)
-        const user = await User.findById(decoded.userId);  // Use `findById` for Mongoose
+        
+        const user = await User.findById(decoded.userId); 
         if (!user) {
             return res.status(401).json({ message: "User Not Found!" });
         }
 
-        // Attach the user to the request object so that it's available in the next middleware
+        // Attach the user to the request object so that it's available
         req.user = user;
 
-        // Call the next middleware
+        
         next();
     } catch (err) {
         console.log(err);

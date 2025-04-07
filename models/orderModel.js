@@ -14,22 +14,22 @@ const orderSchema = new Schema({
   },
   customerId: {
     type: Number,  // Mongoose uses `Number` for integers
-    required: true,  // Ensuring customerId is required
+    required: true,  
   },
   status: {
     type: String,  // Mongoose uses `String` for text fields
     enum: ['PENDING', 'SUCCESSFUL', 'FAILED'],  // Enum values for status
-    default: 'PENDING',  // Default status is PENDING
+    default: 'PENDING',  
   },
   paymentSessionId: {
-    type: String,  // Mongoose uses `String` for text fields
-    required: false,  // This field can be null or not present
+    type: String,  
+    required: false,  
   },
   userId: {
-      type: mongoose.Schema.Types.ObjectId,  // Reference to User model
+      type: mongoose.Schema.Types.ObjectId,  
       ref: 'User',
       required: true,
     },
-}, { timestamps: true });  // Add timestamps to automatically include createdAt and updatedAt fields
+}, { timestamps: true });  
 
 module.exports = mongoose.model('Order', orderSchema);

@@ -1,5 +1,6 @@
 const Expense = require('../models/expense'); 
 const User =require('../models/userModel');
+const AWS = require('aws-sdk');
 const Downloaded =require('../models/Downloaded');
 const fs = require('fs');
 const path = require('path');
@@ -9,14 +10,14 @@ const { Parser } = require('json2csv');
 const mongoose = require('mongoose');
 
 const addExpense = async (req, res) => {
-  const session = await mongoose.startSession(); // Start a session for the transaction
+  const session = await mongoose.startSession(); // For Start a session for the transaction
   session.startTransaction();
 
   const { description, amount, category } = req.body;
   const userId = req.user.id;
 
   try {
-    // Create new expense
+    
     const newExpense = new Expense({
       description,
       amount,
@@ -24,11 +25,11 @@ const addExpense = async (req, res) => {
       userId,
     });
 
-    // Save the new expense within the transaction session
+    // for saving the new expense within the transaction session
     await newExpense.save({ session });
 
-    // Find user by userId
-    const user = await User.findById(userId).session(session); // Use session here
+  
+    const user = await User.findById(userId).session(session); 
 
     if (!user) {
       await session.abortTransaction(); // Rollback transaction if user not found
@@ -45,7 +46,7 @@ const addExpense = async (req, res) => {
     // Commit the transaction
     await session.commitTransaction();
 
-    // Respond with success
+    
     res.status(201).json({
       message: 'Expense added successfully',
       newExpenseDetail: newExpense,
@@ -64,7 +65,7 @@ const addExpense = async (req, res) => {
 
 
 const deleteExpense = async (req, res) => {
-  const session = await mongoose.startSession(); // Start a session for transaction
+  const session = await mongoose.startSession(); 
   session.startTransaction();
 
   const { id } = req.params;
@@ -73,36 +74,36 @@ const deleteExpense = async (req, res) => {
   console.log(id)
 
   try {
-    // Find and delete the expense by id and userId
+  
     const deletedExpense = await Expense.findOneAndDelete({ 
       _id: id, 
       userId: req.user.id 
-    }).session(session); // Use session to include in transaction
+    }).session(session); 
 
     if (!deletedExpense) {
-      await session.abortTransaction(); // Rollback transaction if no expense found
+      await session.abortTransaction();
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    // Commit the transaction
+    
     await session.commitTransaction();
     
-    // Send response after successful deletion
+   
     res.status(200).json({ message: 'Expense deleted successfully' });
 
   } catch (error) {
-    await session.abortTransaction(); // Rollback transaction in case of error
+    await session.abortTransaction(); 
     console.error(error);
     res.status(500).json({ message: 'Error deleting expense', error: error.message });
   } finally {
-    session.endSession(); // End the session
+    session.endSession(); 
   }
 };
 
 
 const getExpenses = async (req, res) => {
   try {
-    const user = req.user; // Get the user from the request
+    const user = req.user; 
 
     // Pagination parameters
     const page = parseInt(req.query.page) || 1;
@@ -117,10 +118,10 @@ const getExpenses = async (req, res) => {
     // Count total expenses for the user
     const count = await Expense.countDocuments({ userId: user.id });
 
-    // Check if the user is a premium user
+   
     const isPremium = user.isPremium;
 
-    // Send response with pagination data
+    // with pagination data
     res.json({
       expenses,
       isPremium,
@@ -136,13 +137,42 @@ const getExpenses = async (req, res) => {
   }
 };
 
+async function uploadToS3(data, fileName){ 
+  const s3bucket = new AWS.S3({
+      accessKeyId: process.env.IAM_USER_KEY, 
+      secretAccessKey: process.env.IAM_USER_SECRET,
+      bucket_name: process.env.BUCKET_NAME
+  });
+
+  s3bucket.createBucket(()=>{
+      var params={
+          Bucket : process.env.BUCKET_NAME,
+          Key : fileName,
+          Body : data,
+          ACL: "public-read"
+      }
+      return new Promise((resolve, reject)=>{
+      s3bucket.upload(params,(err,s3response)=>{
+          if(err){
+              console.log("cant upload to s3", err)
+              reject(err)
+          }
+          else{
+              console.log("upload to s3 success", s3response.Location)
+              resolve(s3response.Location)
+          }
+      })
+  })
+  })
+
+}
 
 
 const downloadExpenses = async (req, res) => {
     try {
       const userId = req.user.id;
-      const expenses = await Expense.find({ userId })  // Match expenses with the user's id
-    .select('amount category description createdAt')  // Select specific fields
+      const expenses = await Expense.find({ userId }) 
+    .select('amount category description createdAt')  
     .exec();
   
       // Convert JSON to CSV
@@ -164,7 +194,8 @@ const downloadExpenses = async (req, res) => {
   
       
       const fileInfo = { fileName, url: fileUrl };
-      //const response = await req.user.createDownloaded(fileInfo);
+      const uploadResult = await uploadToS3(csv, fileName);
+      console.log(uploadResult)
 
       const newDownloaded = new Downloaded({
         fileName,

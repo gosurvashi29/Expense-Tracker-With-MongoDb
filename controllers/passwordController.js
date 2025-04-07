@@ -9,7 +9,7 @@ const ForgotPasswordRequest= require("../models/ForgotPasswordRequest")
 require("dotenv").config()
 
 exports.forgotPassword = async (req, res) => {
-  //send password link to user's email
+  
   const userEmail = req.body.email;
   try {
     
@@ -21,15 +21,13 @@ exports.forgotPassword = async (req, res) => {
     const forgotPasswordRequest = new ForgotPasswordRequest({
       id: uuid,
       isActive: true,
-      userId: user._id // Link to the user if needed
+      userId: user._id 
     });
   
-    // Save the forgot password request
+    
     await forgotPasswordRequest.save();
   
-    // Optionally, you could also save the request directly to the user if `createForgotPasswordRequest` is meant to directly add it to the user's document.
-    //user.forgotPasswordRequests.push(forgotPasswordRequest);
-    //await user.save();
+    
 
     const transporter = nodemailer.createTransport({
         service:"gmail",

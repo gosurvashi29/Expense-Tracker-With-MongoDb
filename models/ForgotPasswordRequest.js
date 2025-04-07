@@ -13,8 +13,8 @@ const forgotPasswordRequestSchema = new Schema({
     default: true,
   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,  // Reference to the User model
-    ref: 'User',  // This defines the reference to the User model
+    type: mongoose.Schema.Types.ObjectId,  
+    ref: 'User',  
     required: true,
   }
 });
